@@ -9,14 +9,14 @@ import MyInput from './components/UI/MyInput/MyInput';
 import MySelect from './components/UI/MySelect/MySelect';
 import Slider from './components/UI/Slider/Slider';
 import './styles/App.css';
-import { ICard, IFilterParameters, IInitialParameters } from './types/types';
+import { Direction, ICard, IFilterParameters, IInitialParameters, ISelectorParameters, IShoppingElement } from './types/types';
 
 
 const App = () => {
   const initialParameters: IInitialParameters = getLocalStorage();
   const [cards, setCards] = useState<ICard[]>([]);
-  const [equalShopping, setEqualShopping] = useState<number>(0);
-  const [selectedSort, setSelectedSort] = useState<keyof ICard>('id');
+  const [shopping, setShopping] = useState<IShoppingElement[]>(initialParameters.shopping);
+  const [selectedSort, setSelectedSort] = useState<ISelectorParameters>({ keygen: 'id', direction: Direction.Up });
   const [searchLine, setSearchLine] = useState<string>('');
   const [filterParameters, setFilterParameters] = useState<string[]>(initialParameters.filter);
   const [sliderParametersPrice, setSliderParametersPrice] = useState<number[]>(initialParameters.sliderPrice);
@@ -32,14 +32,19 @@ const App = () => {
     setSelectedSort(initialParameters.sort);
   }
 
-  const putInBasket = (equal: number) => {
-    setEqualShopping(equal);
+  const putInBasket = (equal: IShoppingElement[]) => {
+    setShopping(equal);
   }
 
   const sortCarding = useMemo(() => {
     return [...cards].sort((a, b) => {
-      const first = a[selectedSort];
-      const second = b[selectedSort];
+      const first = (selectedSort.direction === Direction.Up
+        ? a[selectedSort.keygen]
+        : b[selectedSort.keygen])
+
+      const second = (selectedSort.direction === Direction.Up
+        ? b[selectedSort.keygen]
+        : a[selectedSort.keygen])
 
       return (isNaN(Number(first)) || isNaN(Number(second)))
         ? first.localeCompare(second)
@@ -52,7 +57,7 @@ const App = () => {
   }, [searchLine, selectedSort])
 
 
-  const sortCards = (sort: keyof ICard) => {
+  const sortCards = (sort: ISelectorParameters) => {
     setSelectedSort(sort);
   }
 
@@ -117,11 +122,11 @@ const App = () => {
 
   const setLocalStorage = () => {
     const allParameters = {
-      'shopping': equalShopping,
       'sort': selectedSort,
       'filter': filterParameters,
       'sliderPrice': sliderParametersPrice,
       'sliderEqual': sliderParametersEqual,
+      'shopping': shopping
     }
     localStorage.setItem('ps0m_online_store', JSON.stringify(allParameters))
   }
@@ -131,24 +136,24 @@ const App = () => {
     return initialRaw
       ? JSON.parse(initialRaw)
       : {
-        'shopping': 0,
-        'sort': 'name',
+        'sort': { keygen: 'name', direction: Direction.Up },
         'filter': [],
         'sliderPrice': [0, 100],
         'sliderEqual': [0, 100],
+        'shopping': []
       }
   }
 
   useEffect(() => {
     setLocalStorage();
-  }, [sortSlider]);
+  }, [sortSlider, shopping]);
 
 
 
 
   return (
     <div className="container" >
-      <MyHeader shopping={equalShopping} />
+      <MyHeader shopping={shopping.length} />
       <main className="main">
         <MyCheckboxBlock
           instructions={[
@@ -161,14 +166,12 @@ const App = () => {
           checkedFilter={filterParameters}
         >
           <Slider
-            // parameters={sliderParametersPrice}
             onSetSlider={onSetSliderPrice}
             name={'price'}
             initialValue={sliderParametersPrice}>
             Цена
           </Slider >
           <Slider
-            // parameters={sliderParametersEqual}
             onSetSlider={onSetSliderEqual}
             name={'equal'}
             initialValue={sliderParametersEqual}
@@ -189,10 +192,11 @@ const App = () => {
             className="card__button"
             onClick={() => {
               setSearchLine('');
-              setSelectedSort('name');
+              setSelectedSort({ keygen: 'name', direction: Direction.Up });
               setFilterParameters([]);
               setSliderParametersPrice([0, 100]);
               setSliderParametersEqual([0, 100]);
+              setShopping([]);
               localStorage.removeItem('ps0m_online_store');
             }} isActive={false} >
             Очистить настройки
@@ -214,15 +218,24 @@ const App = () => {
             <MySelect
               defaultValue={'Сортировать по:'}
               options={[
-                { value: "name", name: 'По имени' },
-                { value: "equal", name: 'По количеству' }
+                { value: "name", name: 'По имени', direction: Direction.Up },
+                { value: "name", name: 'По имени', direction: Direction.Down },
+                { value: "equal", name: 'По количеству', direction: Direction.Up },
+                { value: "equal", name: 'По количеству', direction: Direction.Down },
+                { value: "price", name: 'По цене', direction: Direction.Up },
+                { value: "price", name: 'По цене', direction: Direction.Down },
               ]}
               value={selectedSort}
               onChange={sortCards}
             />
           </div>
 
-          <CardList cards={sortSlider} put={putInBasket} />
+          <CardList
+            cards={sortSlider}
+            put={putInBasket}
+            shopping={shopping}
+            setShopping={setShopping}
+          />
         </section>
       </main>
       <MyFooter />
