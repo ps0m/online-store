@@ -9,18 +9,20 @@ import MyInput from './components/UI/MyInput/MyInput';
 import MySelect from './components/UI/MySelect/MySelect';
 import Slider from './components/UI/Slider/Slider';
 import './styles/App.css';
-import { Direction, ICard, IFilterParameters, IInitialParameters, ISelectorParameters, IShoppingElement } from './types/types';
+import { Direction, ICard, IFilterParameters, IInitialParameters, ISelectParameters, IShoppingElement } from './types/types';
 
 
 const App = () => {
   const initialParameters: IInitialParameters = getLocalStorage();
   const [cards, setCards] = useState<ICard[]>([]);
-  const [shopping, setShopping] = useState<IShoppingElement[]>(initialParameters.shopping);
-  const [selectedSort, setSelectedSort] = useState<ISelectorParameters>({ keygen: 'id', direction: Direction.Up });
+  const [shopping, setShopping] = useState<IShoppingElement[]>(initialParameters.shopping || []);
+  const [selectedSort, setSelectedSort] = useState<ISelectParameters>(initialParameters.sort);
   const [searchLine, setSearchLine] = useState<string>('');
-  const [filterParameters, setFilterParameters] = useState<string[]>(initialParameters.filter);
-  const [sliderParametersPrice, setSliderParametersPrice] = useState<number[]>(initialParameters.sliderPrice);
-  const [sliderParametersEqual, setSliderParametersEqual] = useState<number[]>(initialParameters.sliderEqual);
+  const [filterParameters, setFilterParameters] = useState<string[]>(initialParameters.filter || []);
+  const [sliderParametersPrice, setSliderParametersPrice] = useState<number[]>(initialParameters.sliderPrice || []);
+  const [sliderParametersEqual, setSliderParametersEqual] = useState<number[]>(initialParameters.sliderEqual || []);
+
+
 
   useEffect(() => {
     getCards();
@@ -29,7 +31,6 @@ const App = () => {
   async function getCards() {
     const data = await GeterCards.getCards();
     data ? setCards(data) : setCards([]);
-    setSelectedSort(initialParameters.sort);
   }
 
   const putInBasket = (equal: IShoppingElement[]) => {
@@ -50,14 +51,15 @@ const App = () => {
         ? first.localeCompare(second)
         : (Number(first) - Number(second))
     })
-  }, [selectedSort]);
+  }, [cards, selectedSort]);
 
   const sortAndSearchCards = useMemo(() => {
     return sortCarding.filter(card => card.name.toUpperCase().includes(searchLine.toUpperCase()))
-  }, [searchLine, selectedSort])
+  }, [cards, searchLine, selectedSort])
 
 
-  const sortCards = (sort: ISelectorParameters) => {
+  const sortCards = (sort: ISelectParameters) => {
+    console.log(sort);
     setSelectedSort(sort);
   }
 
@@ -98,7 +100,7 @@ const App = () => {
         return filterObject[key].includes(card[key]);
       })
     })
-  }, [searchLine, selectedSort, filterParameters])
+  }, [cards, searchLine, selectedSort, filterParameters])
 
   const sortSlider = useMemo(() => {
     return sortAndFilterAndSearchCards.filter(card => {
@@ -109,7 +111,7 @@ const App = () => {
         ? true
         : false
     })
-  }, [searchLine, selectedSort, filterParameters, sliderParametersPrice, sliderParametersEqual])
+  }, [cards, searchLine, selectedSort, filterParameters, sliderParametersPrice, sliderParametersEqual])
 
   const onSetSliderPrice = (value: number[]) => {
     setSliderParametersPrice([value[0], value[1]])
@@ -218,12 +220,12 @@ const App = () => {
             <MySelect
               defaultValue={'Сортировать по:'}
               options={[
-                { value: "name", name: 'По имени', direction: Direction.Up },
-                { value: "name", name: 'По имени', direction: Direction.Down },
-                { value: "equal", name: 'По количеству', direction: Direction.Up },
-                { value: "equal", name: 'По количеству', direction: Direction.Down },
-                { value: "price", name: 'По цене', direction: Direction.Up },
-                { value: "price", name: 'По цене', direction: Direction.Down },
+                { value: "name&0", name: 'По имени ▲', direction: Direction.Up },
+                { value: "name&1", name: 'По имени ▼', direction: Direction.Down },
+                { value: "equal&0", name: 'По количеству ▲', direction: Direction.Up },
+                { value: "equal&1", name: 'По количеству ▼', direction: Direction.Down },
+                { value: "price&0", name: 'По цене ▲', direction: Direction.Up },
+                { value: "price&1", name: 'По цене ▼', direction: Direction.Down },
               ]}
               value={selectedSort}
               onChange={sortCards}
