@@ -22,19 +22,14 @@ const App = () => {
   const [sliderParametersPrice, setSliderParametersPrice] = useState<number[]>(initialParameters.sliderPrice || []);
   const [sliderParametersEqual, setSliderParametersEqual] = useState<number[]>(initialParameters.sliderEqual || []);
 
-
-
   useEffect(() => {
     getCards();
   }, []);
 
   async function getCards() {
     const data = await GeterCards.getCards();
-    data ? setCards(data) : setCards([]);
-  }
 
-  const putInBasket = (equal: IShoppingElement[]) => {
-    setShopping(equal);
+    data ? setCards(data) : setCards([]);
   }
 
   const sortCarding = useMemo(() => {
@@ -58,11 +53,6 @@ const App = () => {
   }, [cards, searchLine, selectedSort])
 
 
-  const sortCards = (sort: ISelectParameters) => {
-    console.log(sort);
-    setSelectedSort(sort);
-  }
-
   function changeFilter(e: React.ChangeEvent<HTMLInputElement>) {
     const target = e.target.id;
 
@@ -74,7 +64,6 @@ const App = () => {
   }
 
   const sortAndFilterAndSearchCards = useMemo(() => {
-
     const filterObject: IFilterParameters = {
       soil: [],
       frostresistance: [],
@@ -95,7 +84,9 @@ const App = () => {
 
     return sortAndSearchCards.filter(card => {
       return filterKeys.every(key => {
-        if (!filterObject[key].length) return true;
+        if (!filterObject[key].length) {
+          return true;
+        }
 
         return filterObject[key].includes(card[key]);
       })
@@ -113,15 +104,6 @@ const App = () => {
     })
   }, [cards, searchLine, selectedSort, filterParameters, sliderParametersPrice, sliderParametersEqual])
 
-  const onSetSliderPrice = (value: number[]) => {
-    setSliderParametersPrice([value[0], value[1]])
-  };
-
-  const onSetSliderEqual = (value: number[]) => {
-    setSliderParametersEqual([value[0], value[1]])
-  };
-
-
   const setLocalStorage = () => {
     const allParameters = {
       'sort': selectedSort,
@@ -130,11 +112,13 @@ const App = () => {
       'sliderEqual': sliderParametersEqual,
       'shopping': shopping
     }
+
     localStorage.setItem('ps0m_online_store', JSON.stringify(allParameters))
   }
 
   function getLocalStorage() {
     const initialRaw = localStorage.getItem('ps0m_online_store')
+
     return initialRaw
       ? JSON.parse(initialRaw)
       : {
@@ -150,9 +134,6 @@ const App = () => {
     setLocalStorage();
   }, [sortSlider, shopping]);
 
-
-
-
   return (
     <div className="container" >
       <MyHeader shopping={shopping.length} />
@@ -167,19 +148,22 @@ const App = () => {
           changeFilter={changeFilter}
           checkedFilter={filterParameters}
         >
+
           <Slider
-            onSetSlider={onSetSliderPrice}
+            onSetSlider={(value: number[]) => setSliderParametersPrice([value[0], value[1]])}
             name={'price'}
             initialValue={sliderParametersPrice}>
             Цена
           </Slider >
+
           <Slider
-            onSetSlider={onSetSliderEqual}
+            onSetSlider={(value: number[]) => setSliderParametersEqual([value[0], value[1]])}
             name={'equal'}
             initialValue={sliderParametersEqual}
           >
             Количество
           </Slider>
+
           <MyButton
             className="card__button"
             onClick={() => {
@@ -190,6 +174,7 @@ const App = () => {
             isActive={false} >
             Очистить фильтры
           </MyButton>
+
           <MyButton
             className="card__button"
             onClick={() => {
@@ -204,6 +189,7 @@ const App = () => {
             Очистить настройки
           </MyButton>
         </MyCheckboxBlock>
+
         <section className='content__container'>
           <div className='search_find'>
             <MyInput
@@ -228,13 +214,13 @@ const App = () => {
                 { value: "price&1", name: 'По цене ▼', direction: Direction.Down },
               ]}
               value={selectedSort}
-              onChange={sortCards}
+              onChange={(sort: ISelectParameters) => setSelectedSort(sort)}
             />
           </div>
 
           <CardList
             cards={sortSlider}
-            put={putInBasket}
+            put={(equal: IShoppingElement[]) => setShopping(equal)}
             shopping={shopping}
             setShopping={setShopping}
           />
@@ -244,6 +230,7 @@ const App = () => {
     </div >
   );
 }
+
 export default App
 
 
