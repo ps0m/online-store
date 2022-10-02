@@ -1,9 +1,9 @@
 import React from 'react';
-import classes from './MyCardItem.module.css';
-import logoBasket from '../UI/MyBasket/MyBasket.svg';
 import { IShoppingElement } from '../../types/types';
-import MyButtonStar from '../UI/MyButtons/MyButtonStar/MyButtonStar';
+import logoBasket from '../UI/MyBasket/MyBasket.svg';
 import MyButton from '../UI/MyButtons/MyButton/MyButton';
+import MyButtonStar from '../UI/MyButtons/MyButtonStar/MyButtonStar';
+import classes from './MyCardItem.module.css';
 
 interface MyCardItemProps {
   element: IShoppingElement;
@@ -47,7 +47,7 @@ const MyCardItem = (props: MyCardItemProps) => {
       <p className={classes.card__text}>Морозоустойчивость: {props.element.frostresistance}</p>
       <p className={classes.card__text}>Освещенние: {props.element.illumination}</p>
       <div className={classes.card__buttons}>
-        {props.element.popular
+        {props.element.popular === 'Поппулярные'
           ? <MyButtonStar />
           : <div></div>
         }
